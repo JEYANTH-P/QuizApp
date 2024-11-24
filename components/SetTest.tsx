@@ -1,8 +1,10 @@
-// components/SetTest.tsx
 import * as React from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
+import { Card, Text, TextInput, Button } from "react-native-paper";
+import { useRouter } from 'expo-router';
 
-const SetTest = ({ onSetTest }) => {
+const SetTest = () => {
+  const router = useRouter();
   const [testName, setTestName] = React.useState("");
   const [testMarks, setTestMarks] = React.useState("");
   const [testLocation, setTestLocation] = React.useState("");
@@ -13,31 +15,43 @@ const SetTest = ({ onSetTest }) => {
       "Test Set",
       `Test Name: ${testName}, Marks: ${testMarks}, Location: ${testLocation}`
     );
-    onSetTest();
+    router.push('/SetQuestions'); // Navigate to SetQuestions
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Test Name:</Text>
-      <TextInput
-        style={styles.input}
-        value={testName}
-        onChangeText={setTestName}
-      />
-      <Text style={styles.label}>Test Marks:</Text>
-      <TextInput
-        style={styles.input}
-        value={testMarks}
-        onChangeText={setTestMarks}
-        keyboardType="numeric"
-      />
-      <Text style={styles.label}>Test Location:</Text>
-      <TextInput
-        style={styles.input}
-        value={testLocation}
-        onChangeText={setTestLocation}
-      />
-      <Button title="Set Test" onPress={handleSetTest} />
+      <Text style={styles.title}>Set Quiz</Text>
+      <Card style={styles.card}>
+        <Card.Content>
+          <Text style={styles.label}>Test Name:</Text>
+          <TextInput
+            mode="outlined"
+            style={styles.input}
+            value={testName}
+            onChangeText={setTestName}
+          />
+          <Text style={styles.label}>Test Marks:</Text>
+          <TextInput
+            mode="outlined"
+            style={styles.input}
+            value={testMarks}
+            onChangeText={setTestMarks}
+            keyboardType="numeric"
+          />
+          <Text style={styles.label}>Test Location:</Text>
+          <TextInput
+            mode="outlined"
+            style={styles.input}
+            value={testLocation}
+            onChangeText={setTestLocation}
+          />
+        </Card.Content>
+        <Card.Actions>
+          <Button mode="contained" onPress={handleSetTest} style={styles.button}>
+            Set Test
+          </Button>
+        </Card.Actions>
+      </Card>
     </View>
   );
 };
@@ -46,16 +60,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#6200ee',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  card: {
+    margin: 16,
   },
   label: {
     fontSize: 16,
     marginVertical: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 8,
     marginVertical: 8,
+  },
+  button: {
+    marginTop: 16,
   },
 });
 

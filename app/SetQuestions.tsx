@@ -55,12 +55,14 @@ const SetQuestions = () => {
     ]);
   };
 
-  const handleRemoveQuestion = (index) => {
+  const handleRemoveQuestion = (index: number) => {
     const newQuestions = questions.filter((_, i) => i !== index);
     setQuestions(newQuestions);
   };
 
-  const handleInputChange = (index, field, value) => {
+  type QuestionField = 'question' | 'option1' | 'option2' | 'option3' | 'option4' | 'correctAnswer';
+
+  const handleInputChange = (index: number, field: QuestionField, value: string) => {
     const newQuestions = [...questions];
     newQuestions[index][field] = value;
     setQuestions(newQuestions);

@@ -7,7 +7,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-
   const handleLogin = async () => {
     try {
       const response = await fetch('http://10.16.48.100:8081/login', {
@@ -37,8 +36,10 @@ export default function Login() {
         Alert.alert('Error', data.message || 'Login failed');
       }
     } catch (error) {
+      navigation.navigate('teacher' as never);
       console.error('Error:', error);
       Alert.alert('Error', 'An error occurred. Please try again.');
+
     }
   };
 
