@@ -17,7 +17,7 @@ const UpcomingTest = () => {
     testEndTiming: string;
     testDuration: number;
   }
-  
+
   const [upcomingTests, setUpcomingTests] = React.useState<Test[]>([]);
   const [pastTests, setPastTests] = React.useState<Test[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -32,10 +32,10 @@ const UpcomingTest = () => {
 
         const currentDate = new Date();
 
-        const upcoming: any[] | ((prevState: never[]) => never[]) = [];
-        const past: any[] | ((prevState: never[]) => never[]) = [];
+        const upcoming: Test[] = [];
+        const past: Test[] = [];
 
-        testData.forEach((test: { testDate: any; testStartTiming: any; testEndTiming: any; }) => {
+        testData.forEach((test: Test) => {
           const testStartDate = new Date(`${test.testDate}T${test.testStartTiming}:00`);
           const testEndDate = new Date(`${test.testDate}T${test.testEndTiming}:00`);
           if (testEndDate > currentDate) {
@@ -97,7 +97,7 @@ const UpcomingTest = () => {
     }
   };
 
-  const renderTestCard = (test: { testDate: any; testStartTiming: any; testEndTiming: any; testId: any; testName?: any; testMarks?: any; testLocation?: any; testDuration?: any; }) => {
+  const renderTestCard = (test: Test) => {
     const currentDate = new Date();
     const testStartDate = new Date(`${test.testDate}T${test.testStartTiming}:00`);
     const testEndDate = new Date(`${test.testDate}T${test.testEndTiming}:00`);
@@ -130,13 +130,13 @@ const UpcomingTest = () => {
   }
 
   return (
-    <View>
+    <View style={styles.container}>
       <Text style={styles.title}>UPCOMING TESTS</Text>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         {upcomingTests.map(renderTestCard)}
       </ScrollView>
       <Text style={styles.title}>PAST TESTS</Text>
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         {pastTests.map(renderTestCard)}
       </ScrollView>
     </View>
@@ -145,6 +145,10 @@ const UpcomingTest = () => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    paddingBottom: 56, // Adjust this value based on the height of the BottomNavigation bar
+  },
+  scrollContainer: {
     padding: 16,
   },
   card: {

@@ -7,7 +7,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const TestDetails = () => {
   const route = useRoute();
   const { testId, testName, testMarks } = route.params;
-  const [questions, setQuestions] = React.useState([]);
+  interface Question {
+    questionId: string;
+    questionText: string;
+    option1: string;
+    option2: string;
+    option3: string;
+    option4: string;
+    correctAnswer: string;
+    userAnswer: string;
+    correct: boolean;
+  }
+
+  const [questions, setQuestions] = React.useState<Question[]>([]);
   const [awardedMarks, setAwardedMarks] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
 

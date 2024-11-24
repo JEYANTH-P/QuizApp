@@ -36,7 +36,6 @@ export default function Login() {
         Alert.alert('Error', data.message || 'Login failed');
       }
     } catch (error) {
-      navigation.navigate('teacher' as never);
       console.error('Error:', error);
       Alert.alert('Error', 'An error occurred. Please try again.');
 
