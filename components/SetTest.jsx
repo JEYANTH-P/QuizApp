@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View, StyleSheet, Alert } from "react-native";
+import { View, StyleSheet, Alert, Platform } from "react-native";
 import { Card, Text, TextInput, Button } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
@@ -14,20 +14,24 @@ const SetTest = () => {
   const [testDate, setTestDate] = React.useState(new Date());
   const [testDuration, setTestDuration] = React.useState("");
 
+  const [showStartTimePicker, setShowStartTimePicker] = React.useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = React.useState(false);
+  const [showDatePicker, setShowDatePicker] = React.useState(false);
+
   const convertDurationToMinutes = (duration) => {
     const [hours, minutes] = duration.split(":").map(Number);
     return hours * 60 + minutes;
   };
 
+  const formatTime = (date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   const handleSetTest = async () => {
     console.log("handleSetTest called");
     const durationInMinutes = convertDurationToMinutes(testDuration);
-  
-    const formatTime = (date) => {
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes}`;
-    };
   
     const testStartTiming = formatTime(testStartTime);
     const testEndTiming = formatTime(testEndTime);
@@ -110,35 +114,56 @@ const SetTest = () => {
             onChangeText={setTestLocation}
           />
           <Text style={styles.label}>Test Start Time:</Text>
-          <DateTimePicker
-            value={testStartTime}
-            mode="time"
-            display="default"
-            onChange={(event, selectedDate) => {
-              const currentDate = selectedDate || testStartTime;
-              setTestStartTime(currentDate);
-            }}
-          />
+          <Button onPress={() => setShowStartTimePicker(true)}>Select Start Time</Button>
+          <Text>{formatTime(testStartTime)}</Text>
+          {showStartTimePicker && (
+            <DateTimePicker
+              value={testStartTime}
+              mode="time"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowStartTimePicker(Platform.OS === 'ios');
+                if (selectedDate) {
+                  setTestStartTime(selectedDate);
+                  setShowStartTimePicker(false); // Close the picker
+                }
+              }}
+            />
+          )}
           <Text style={styles.label}>Test End Time:</Text>
-          <DateTimePicker
-            value={testEndTime}
-            mode="time"
-            display="default"
-            onChange={(event, selectedDate) => {
-              const currentDate = selectedDate || testEndTime;
-              setTestEndTime(currentDate);
-            }}
-          />
+          <Button onPress={() => setShowEndTimePicker(true)}>Select End Time</Button>
+          <Text>{formatTime(testEndTime)}</Text>
+          {showEndTimePicker && (
+            <DateTimePicker
+              value={testEndTime}
+              mode="time"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowEndTimePicker(Platform.OS === 'ios');
+                if (selectedDate) {
+                  setTestEndTime(selectedDate);
+                  setShowEndTimePicker(false); // Close the picker
+                }
+              }}
+            />
+          )}
           <Text style={styles.label}>Test Date:</Text>
-          <DateTimePicker
-            value={testDate}
-            mode="date"
-            display="default"
-            onChange={(event, selectedDate) => {
-              const currentDate = selectedDate || testDate;
-              setTestDate(currentDate);
-            }}
-          />
+          <Button onPress={() => setShowDatePicker(true)}>Select Date</Button>
+          <Text>{testDate.toDateString()}</Text>
+          {showDatePicker && (
+            <DateTimePicker
+              value={testDate}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(Platform.OS === 'ios');
+                if (selectedDate) {
+                  setTestDate(selectedDate);
+                  setShowDatePicker(false); // Close the picker
+                }
+              }}
+            />
+          )}
           <Text style={styles.label}>Test Duration (HH:MM):</Text>
           <TextInput
             mode="outlined"
