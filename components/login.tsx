@@ -3,16 +3,14 @@ import { View, TextInput, Button, StyleSheet, Text, Alert } from "react-native";
 import { useNavigation } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigation = useNavigation();
-  AsyncStorage.setItem('userId', '1');
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('https://your-backend-url/login', {
+      const response = await fetch('http://10.16.48.100:8081/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -21,11 +19,12 @@ export default function Login() {
       });
 
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.status === 200) {
         // Store the userId in session or state
         await AsyncStorage.setItem('userId', data.userId.toString());
-        console.log(data.userID.toString())
+        console.log('Stored userId:', data.userId.toString());
 
         if (data.role === 'student') {
           navigation.navigate('student' as never);
@@ -38,7 +37,7 @@ export default function Login() {
         Alert.alert('Error', data.message || 'Login failed');
       }
     } catch (error) {
-      navigation.navigate('student' as never);
+      console.error('Error:', error);
       Alert.alert('Error', 'An error occurred. Please try again.');
     }
   };

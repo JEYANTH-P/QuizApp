@@ -6,59 +6,38 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RightContent = () => <Avatar.Icon icon="calendar" style={styles.icon} />
 
-const sampleTests = [
-  {
-    testId: 1,
-    testName: 'Math Test',
-    testMarks: 100,
-    testStartTiming: '0:00',
-    testEndTiming: '20:59',
-    testLocation: 'Room 101',
-    testDate: '2024-11-24',
-    testDuration: 120,
-  },
-  {
-    testId: 2,
-    testName: 'Science Test',
-    testMarks: 100,
-    testStartTiming: '13:00',
-    testEndTiming: '15:00',
-    testLocation: 'Room 102',
-    testDate: '2023-12-05',
-    testDuration: 120,
-  },
-  {
-    testId: 3,
-    testName: 'History Test',
-    testMarks: 100,
-    testStartTiming: '09:00',
-    testEndTiming: '11:00',
-    testLocation: 'Room 103',
-    testDate: '2023-12-10',
-    testDuration: 120,
-  },
-];
-
 const UpcomingTest = () => {
-  const [upcomingTests, setUpcomingTests] = React.useState([]);
-  const [pastTests, setPastTests] = React.useState([]);
+  interface Test {
+    testId: number;
+    testName: string;
+    testMarks: number;
+    testLocation: string;
+    testDate: string;
+    testStartTiming: string;
+    testEndTiming: string;
+    testDuration: number;
+  }
+  
+  const [upcomingTests, setUpcomingTests] = React.useState<Test[]>([]);
+  const [pastTests, setPastTests] = React.useState<Test[]>([]);
   const [loading, setLoading] = React.useState(true);
   const router = useRouter();
 
   React.useEffect(() => {
-    const fetchCurrentTime = async () => {
+    const fetchTests = async () => {
       try {
+        // Fetch test data
+        const testResponse = await fetch('http://10.16.48.100:8081/test/fetch');
+        const testData = await testResponse.json();
+
         const currentDate = new Date();
 
-        const upcoming = [];
-        const past = [];
+        const upcoming: any[] | ((prevState: never[]) => never[]) = [];
+        const past: any[] | ((prevState: never[]) => never[]) = [];
 
-        sampleTests.forEach(test => {
+        testData.forEach((test: { testDate: any; testStartTiming: any; testEndTiming: any; }) => {
           const testStartDate = new Date(`${test.testDate}T${test.testStartTiming}:00`);
           const testEndDate = new Date(`${test.testDate}T${test.testEndTiming}:00`);
-          console.log(`Current Date: ${currentDate}`);
-          console.log(`Test Start Date: ${testStartDate}`);
-          console.log(`Test End Date: ${testEndDate}`);
           if (testEndDate > currentDate) {
             upcoming.push(test);
           } else {
@@ -69,26 +48,42 @@ const UpcomingTest = () => {
         setUpcomingTests(upcoming);
         setPastTests(past);
 
-        // Simulate backend response
-        const data = { testIds: [1] };
-        if (data.testIds) {
-          const updatedUpcomingTests = upcoming.filter(test => !data.testIds.includes(test.testId));
-          const updatedPastTests = [...past, ...upcoming.filter(test => data.testIds.includes(test.testId))];
+        // Fetch test IDs based on user ID
+        const userIdString = await AsyncStorage.getItem('userId');
+        const userId = userIdString ? parseInt(userIdString, 10) : null;
+        if (userId === null) {
+          Alert.alert('Error', 'User ID not found. Please log in again.');
+          return;
+        }
+        const response = await fetch(`http://10.16.48.100:8081/marks/fetchTestIdsByUser?userId=${userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId }),
+        });
+
+        const data = await response.json();
+        if (response.ok && data) {
+          const updatedUpcomingTests = upcoming.filter(test => !data.includes(test.testId));
+          const updatedPastTests = [...past, ...upcoming.filter(test => data.includes(test.testId))];
           setUpcomingTests(updatedUpcomingTests);
           setPastTests(updatedPastTests);
+        } else {
+          Alert.alert('Error', 'Failed to fetch test IDs. Please try again.');
         }
       } catch (error) {
-        console.error('Error fetching current time:', error);
-        Alert.alert('Error', 'Failed to fetch current time. Please check your internet connection.');
+        console.error('Error fetching tests:', error);
+        Alert.alert('Error', 'Failed to fetch tests. Please check your internet connection.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCurrentTime();
+    fetchTests();
   }, []);
 
-  const handleTestPress = (test) => {
+  const handleTestPress = (test: { testDate: any; testStartTiming: any; testEndTiming: any; testId: number; }) => {
     const currentDate = new Date();
     const testStartDate = new Date(`${test.testDate}T${test.testStartTiming}:00`);
     const testEndDate = new Date(`${test.testDate}T${test.testEndTiming}:00`);
@@ -102,7 +97,7 @@ const UpcomingTest = () => {
     }
   };
 
-  const renderTestCard = (test) => {
+  const renderTestCard = (test: { testDate: any; testStartTiming: any; testEndTiming: any; testId: any; testName?: any; testMarks?: any; testLocation?: any; testDuration?: any; }) => {
     const currentDate = new Date();
     const testStartDate = new Date(`${test.testDate}T${test.testStartTiming}:00`);
     const testEndDate = new Date(`${test.testDate}T${test.testEndTiming}:00`);
@@ -192,8 +187,3 @@ const styles = StyleSheet.create({
 });
 
 export default UpcomingTest;
-
-
-
-
-

@@ -1,96 +1,9 @@
 import * as React from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { Checkbox, ProgressBar, MD3Colors, RadioButton, Card, Button, Avatar } from 'react-native-paper';
 import { useNavigation } from 'expo-router';
 import { useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const sampleQuestions = {
-  questions: [
-    {
-      questionId: 1,
-      questionText: "What is the capital of France?",
-      option1: "Berlin",
-      option2: "Madrid",
-      option3: "Paris",
-      option4: "Rome",
-      correctAnswer: "Paris"
-    },
-    {
-      questionId: 2,
-      questionText: "What is 2 + 2?",
-      option1: "3",
-      option2: "4",
-      option3: "5",
-      option4: "6",
-      correctAnswer: "4"
-    },
-    {
-      questionId: 3,
-      questionText: "Which planet is known as the Red Planet?",
-      option1: "Earth",
-      option2: "Mars",
-      option3: "Jupiter",
-      option4: "Saturn",
-      correctAnswer: "Mars"
-    },
-    {
-      questionId: 4,
-      questionText: "What is the largest ocean on Earth?",
-      option1: "Atlantic Ocean",
-      option2: "Indian Ocean",
-      option3: "Arctic Ocean",
-      option4: "Pacific Ocean",
-      correctAnswer: "Pacific Ocean"
-    },
-    {
-      questionId: 5,
-      questionText: "Who wrote 'Romeo and Juliet'?",
-      option1: "William Shakespeare",
-      option2: "Charles Dickens",
-      option3: "Mark Twain",
-      option4: "Jane Austen",
-      correctAnswer: "William Shakespeare"
-    },
-    {
-      questionId: 6,
-      questionText: "What is the chemical symbol for water?",
-      option1: "H2O",
-      option2: "O2",
-      option3: "CO2",
-      option4: "NaCl",
-      correctAnswer: "H2O"
-    },
-    {
-      questionId: 7,
-      questionText: "What is the square root of 64?",
-      option1: "6",
-      option2: "7",
-      option3: "8",
-      option4: "9",
-      correctAnswer: "8"
-    },
-    {
-      questionId: 8,
-      questionText: "Who painted the Mona Lisa?",
-      option1: "Vincent van Gogh",
-      option2: "Pablo Picasso",
-      option3: "Leonardo da Vinci",
-      option4: "Claude Monet",
-      correctAnswer: "Leonardo da Vinci"
-    },
-    {
-      questionId: 9,
-      questionText: "What is the smallest prime number?",
-      option1: "0",
-      option2: "1",
-      option3: "2",
-      option4: "3",
-      correctAnswer: "2"
-    }
-  ],
-  questionCount: 9
-};
 
 const Questions = () => {
   const [agreed, setAgreed] = React.useState(false);
@@ -100,14 +13,43 @@ const Questions = () => {
   const [showResults, setShowResults] = React.useState(false);
   const [testStarted, setTestStarted] = React.useState(false);
   const [selectedOption, setSelectedOption] = React.useState('');
+  const [questions, setQuestions] = React.useState<Array<{ questionId: number; questionText: string; option1: string; option2: string; option3: string; option4: string; correctAnswer: string }>>([]);
+  const [loading, setLoading] = React.useState(true);
   const navigation = useNavigation();
   const route = useRoute();
   const { testId } = route.params as { testId: string };
 
   React.useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const response = await fetch(`http://10.16.48.100:8081/questions/fetch?testId=${testId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          setQuestions(data.questions);
+        } else {
+          Alert.alert('Error', 'Failed to fetch questions. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        Alert.alert('Error', 'Failed to fetch questions. Please check your internet connection.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [testId]);
+
+  React.useEffect(() => {
     if (testStarted && timer > 0) {
       const interval = setInterval(() => {
-        setTimer(timer - 1);
+        setTimer(prevTimer => prevTimer - 1);
       }, 1000);
       return () => clearInterval(interval);
     } else if (timer === 0) {
@@ -140,64 +82,97 @@ const Questions = () => {
 
   const handleAnswer = async () => {
     if (selectedOption) {
-      const question = sampleQuestions.questions[currentQuestionIndex];
+      const question = questions[currentQuestionIndex];
+      if (!question) {
+        Alert.alert('Error', 'Question not found.');
+        return;
+      }
       const correct = selectedOption === question.correctAnswer;
       const answer = { questionId: question.questionId, answer: selectedOption, correct };
-      setAnswers([...answers, answer]);
+      const updatedAnswers = [...answers, answer];
+      setAnswers(updatedAnswers);
       setSelectedOption('');
-      handleNextQuestion();
+      if (currentQuestionIndex < questions.length - 1) {
+        handleNextQuestion();
+      } else {
+        setShowResults(true);
+        sendResultsToBackend(updatedAnswers);
+      }
     } else {
       Alert.alert('Error', 'You must select an answer before proceeding to the next question.');
     }
   };
 
   const handleUnansweredQuestion = () => {
-    const question = sampleQuestions.questions[currentQuestionIndex];
+    const question = questions[currentQuestionIndex];
+    if (!question) {
+      Alert.alert('Error', 'Question not found.');
+      return;
+    }
     const answer = { questionId: question.questionId, answer: "", correct: false };
-    setAnswers([...answers, answer]);
+    setAnswers(prevAnswers => [...prevAnswers, answer]);
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < sampleQuestions.questionCount - 1) {
+    if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setTimer(30);
     } else {
       setShowResults(true);
-      sendResultsToBackend();
+      sendResultsToBackend(answers);
     }
   };
 
-  const sendResultsToBackend = async () => {
+  const sendResultsToBackend = async (finalAnswers: any[]) => {
     const userId = await AsyncStorage.getItem('userId');
-    const response = await fetch('https://your-backend-url/submit-answers', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId,
-        testId,
-        answers
-      }),
-    });
+    if (!userId) {
+      Alert.alert('Error', 'User ID not found. Please log in again.');
+      return;
+    }
+    const formattedAnswers = finalAnswers.map(answer => ({
+      questionId: answer.questionId,
+      testId: parseInt(testId, 10),
+      userId: parseInt(userId, 10),
+      userAnswer: answer.answer,
+      isCorrect: answer.correct,
+    }));
 
-    if (!response.ok) {
+    console.log('Formatted Answers:', JSON.stringify(formattedAnswers, null, 2));
+
+    try {
+      const response = await fetch('http://10.16.48.100:8081/marks/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedAnswers),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error submitting answers:', errorData);
+        Alert.alert('Error', 'Failed to submit answers. Please try again.');
+      } else {
+        console.log('Successfully submitted answers');
+        handleBackToUpcomingTests();
+      }
+    } catch (error) {
+      console.error('Error submitting answers:', error);
       Alert.alert('Error', 'Failed to submit answers. Please try again.');
     }
   };
 
   const handleBackToUpcomingTests = () => {
-    // Update the user's test status to move the ongoing test to the past
-    // This is a placeholder for the actual implementation
-    // You might need to update the user's data in your backend or local storage
-
     // Navigate to the upcoming tests screen
     navigation.navigate('student' as never);
   };
 
   const renderQuestion = () => {
-    const question = sampleQuestions.questions[currentQuestionIndex];
-    const progressPercentage = ((currentQuestionIndex + 1) / sampleQuestions.questionCount) * 100;
+    const question = questions[currentQuestionIndex];
+    if (!question) {
+      return null;
+    }
+    const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
     const progress = Math.floor(progressPercentage / 10) / 10;
     return (
       <View style={styles.questionContainer}>
@@ -239,10 +214,10 @@ const Questions = () => {
 
   const renderResults = () => {
     const answeredCount = answers.filter(answer => answer.answer !== "").length;
-    const unansweredCount = sampleQuestions.questionCount - answeredCount;
-    const allQuestions = Array.from({ length: sampleQuestions.questionCount }, (_, index) => index);
+    const unansweredCount = questions.length - answeredCount;
+    const allQuestions = Array.from({ length: questions.length }, (_, index) => index);
     const completeAnswers = allQuestions.map((questionIndex) => {
-      const question = sampleQuestions.questions[questionIndex];
+      const question = questions[questionIndex];
       const answer = answers.find(a => a.questionId === question.questionId);
       return answer ? answer : { questionId: question.questionId, answer: "", correct: false };
     });
@@ -268,6 +243,10 @@ const Questions = () => {
       </View>
     );
   };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#6200ee" />;
+  }
 
   return (
     <View style={styles.container}>
@@ -412,3 +391,5 @@ const styles = StyleSheet.create({
 });
 
 export default Questions;
+
+

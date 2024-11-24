@@ -1,32 +1,10 @@
 import * as React from 'react';
 import { Avatar, Button, Card, Text } from 'react-native-paper';
 import { ScrollView, StyleSheet, View, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RightContent = () => <Avatar.Icon icon="check" style={styles.icon} />
-
-const sampleCompletedTests = [
-  {
-    testId: 1,
-    testName: 'Math Test',
-    testMarks: 100,
-    awardedMarks: 90,
-  },
-  {
-    testId: 2,
-    testName: 'Science Test',
-    testMarks: 100,
-    awardedMarks: 80,
-  },
-  {
-    testId: 3,
-    testName: 'History Test',
-    testMarks: 100,
-    awardedMarks: 70,
-  },
-];
 
 const Marks = () => {
   const [completedTests, setCompletedTests] = React.useState([]);
@@ -36,8 +14,26 @@ const Marks = () => {
   React.useEffect(() => {
     const fetchCompletedTests = async () => {
       try {
-        // Simulate fetching completed tests
-        setCompletedTests(sampleCompletedTests);
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) {
+          Alert.alert('Error', 'User ID not found. Please log in again.');
+          return;
+        }
+
+        const response = await fetch(`http://10.16.48.100:8081/marks/fetchTestsByUser?userId=${userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId }),
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          setCompletedTests(data);
+        } else {
+          Alert.alert('Error', 'Failed to fetch completed tests. Please try again.');
+        }
       } catch (error) {
         console.error('Error fetching completed tests:', error);
         Alert.alert('Error', 'Failed to fetch completed tests. Please check your internet connection.');
@@ -49,7 +45,7 @@ const Marks = () => {
     fetchCompletedTests();
   }, []);
 
-  const handleTestPress = (test) => {
+  const handleTestPress = (test: { testId: any; testName: any; testMarks: any; }) => {
     router.push({
       pathname: './testdetails',
       params: { 
@@ -60,7 +56,7 @@ const Marks = () => {
     });
   };
 
-  const renderTestCard = (test) => {
+  const renderTestCard = (test: { testId: any; testName: any; testMarks: any; }) => {
     return (
       <TouchableOpacity onPress={() => handleTestPress(test)} key={test.testId}>
         <Card style={styles.card}>

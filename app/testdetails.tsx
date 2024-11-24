@@ -4,102 +4,6 @@ import { Card } from 'react-native-paper';
 import { useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const sampleData = {
-  awardedMarks: 90,
-  questions: [
-    {
-      questionId: 1,
-      questionText: "What is the capital of France?",
-      option1: "Berlin",
-      option2: "Madrid",
-      option3: "Paris",
-      option4: "Rome",
-      correctAnswer: "Paris",
-      userAnsweredOption: "Madrid",
-    },
-    {
-      questionId: 2,
-      questionText: "What is 2 + 2?",
-      option1: "3",
-      option2: "4",
-      option3: "5",
-      option4: "6",
-      correctAnswer: "4",
-      userAnsweredOption: "4",
-    },
-    {
-      questionId: 3,
-      questionText: "Which planet is known as the Red Planet?",
-      option1: "Earth",
-      option2: "Mars",
-      option3: "Jupiter",
-      option4: "Saturn",
-      correctAnswer: "Mars",
-      userAnsweredOption: "Jupiter",
-    },
-    {
-      questionId: 4,
-      questionText: "What is the largest ocean on Earth?",
-      option1: "Atlantic Ocean",
-      option2: "Indian Ocean",
-      option3: "Arctic Ocean",
-      option4: "Pacific Ocean",
-      correctAnswer: "Pacific Ocean",
-      userAnsweredOption: "Indian Ocean",
-    },
-    {
-      questionId: 5,
-      questionText: "Who wrote 'Romeo and Juliet'?",
-      option1: "William Shakespeare",
-      option2: "Charles Dickens",
-      option3: "Mark Twain",
-      option4: "Jane Austen",
-      correctAnswer: "William Shakespeare",
-      userAnsweredOption: "Mark Twain",
-    },
-    {
-      questionId: 6,
-      questionText: "What is the chemical symbol for water?",
-      option1: "H2O",
-      option2: "O2",
-      option3: "CO2",
-      option4: "NaCl",
-      correctAnswer: "H2O",
-      userAnsweredOption: "H2O",
-    },
-    {
-      questionId: 7,
-      questionText: "What is the square root of 64?",
-      option1: "6",
-      option2: "7",
-      option3: "8",
-      option4: "9",
-      correctAnswer: "8",
-      userAnsweredOption: "9",
-    },
-    {
-      questionId: 8,
-      questionText: "Who painted the Mona Lisa?",
-      option1: "Vincent van Gogh",
-      option2: "Pablo Picasso",
-      option3: "Leonardo da Vinci",
-      option4: "Claude Monet",
-      correctAnswer: "Leonardo da Vinci",
-      userAnsweredOption: "Leonardo da Vinci",
-    },
-    {
-      questionId: 9,
-      questionText: "What is the smallest prime number?",
-      option1: "0",
-      option2: "1",
-      option3: "2",
-      option4: "3",
-      correctAnswer: "2",
-      userAnsweredOption: "3",
-    },
-  ],
-};
-
 const TestDetails = () => {
   const route = useRoute();
   const { testId, testName, testMarks } = route.params;
@@ -110,10 +14,21 @@ const TestDetails = () => {
   React.useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        // Simulate fetching questions for the test
-        const data = sampleData;
-        setQuestions(data.questions);
-        setAwardedMarks(data.awardedMarks);
+        const userId = await AsyncStorage.getItem('userId');
+        const response = await fetch(`http://10.16.48.100:8081/marks/fetch?userId=${userId}&testId=${testId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          setQuestions(data[0]);
+          setAwardedMarks(data[1]);
+        } else {
+          Alert.alert('Error', 'Failed to fetch test details. Please try again.');
+        }
       } catch (error) {
         console.error('Error fetching questions:', error);
         Alert.alert('Error', 'Failed to fetch questions. Please check your internet connection.');
@@ -153,7 +68,7 @@ const TestDetails = () => {
                 style={[
                   styles.optionCard,
                   option === question.correctAnswer && styles.correctOption,
-                  option === question.userAnsweredOption && option !== question.correctAnswer && styles.wrongOption,
+                  option === question.userAnswer && option !== question.correctAnswer && styles.wrongOption,
                 ]}
               >
                 <Card.Content>
@@ -162,9 +77,9 @@ const TestDetails = () => {
               </Card>
             ))}
             <Text style={styles.resultText}>
-              {question.userAnsweredOption === question.correctAnswer ? 'Correct' : 'Incorrect'}
+              {question.correct ? 'Correct' : 'Incorrect'}
             </Text>
-            {question.userAnsweredOption !== question.correctAnswer && (
+            {!question.correct && (
               <Text style={styles.correctAnswerText}>Correct Answer: {question.correctAnswer}</Text>
             )}
           </Card.Content>
