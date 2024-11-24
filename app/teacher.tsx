@@ -1,23 +1,68 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import * as React from "react";
+import { View, StyleSheet, Text } from "react-native";
+import { Button } from "react-native-paper";
+import SetTest from "@/components/SetTest";
+import SetQuestions from "@/components/SetQuestions";
 
-export default function Teacher() {
+const SetTestRoute = ({ onSetTest }: { onSetTest: () => void }) => (
+  <View style={styles.container}>
+    <SetTest onSetTest={onSetTest} />
+  </View>
+);
+
+const SetQuestionsRoute = ({ onBack }: { onBack: () => void }) => (
+  <View style={styles.container}>
+    <Button
+      icon="arrow-left"
+      mode="contained"
+      onPress={onBack}
+      style={styles.backButton}
+    >
+      Back
+    </Button>
+    <Text style={styles.heading}>Add Questions</Text>
+    <SetQuestions />
+  </View>
+);
+
+const Teachers = () => {
+  const [showSetQuestions, setShowSetQuestions] = React.useState(false);
+
+  const handleSetTest = () => {
+    setShowSetQuestions(true);
+  };
+
+  const handleBack = () => {
+    setShowSetQuestions(false);
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Welcome, Teacher!</Text>
+      {!showSetQuestions ? (
+        <SetTestRoute onSetTest={handleSetTest} />
+      ) : (
+        <SetQuestionsRoute onBack={handleBack} />
+      )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    padding: 7,
   },
-  text: {
+  heading: {
     fontSize: 24,
-    color: "#6200ee",
+    fontWeight: "bold",
+    marginTop: 60, // Adjusted to prevent overlap with the back button
+    marginBottom: 16,
+  },
+  backButton: {
+    position: "absolute",
+    top: 16,
+    left: 16,
   },
 });
+
+export default Teachers;
