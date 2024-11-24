@@ -1,10 +1,13 @@
-import * as React from "react";
-import { View, StyleSheet, Alert, ScrollView } from "react-native";
-import { Text, TextInput, Button, Card, IconButton } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
+import React from "react";
+import { View, ScrollView, Alert, StyleSheet } from "react-native";
+import { Card, Text, TextInput, Button, IconButton } from "react-native-paper";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 const SetQuestions = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { testName } = route.params as { testName: string };
+
   const [questions, setQuestions] = React.useState([
     {
       question: "",
@@ -16,7 +19,7 @@ const SetQuestions = () => {
     },
   ]);
 
-  const handleSetQuestion = () => {
+  const handleSetQuestion = async () => {
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (
@@ -37,8 +40,42 @@ const SetQuestions = () => {
         return;
       }
     }
-    // Handle setting the question logic here
-    Alert.alert("Questions Set", JSON.stringify(questions));
+
+    const formattedQuestions = questions.map((q) => ({
+      questionText: q.question,
+      option1: q.option1,
+      option2: q.option2,
+      option3: q.option3,
+      option4: q.option4,
+      correctAnswer: q.correctAnswer,
+    }));
+
+    try {
+      const response = await fetch(
+        `http://10.16.48.100:8081/questions/add?testName=${encodeURIComponent(
+          testName
+        )}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formattedQuestions),
+        }
+      );
+
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+
+      if (response.ok) {
+        Alert.alert("Success", "Questions submitted successfully");
+      } else {
+        Alert.alert("Error", data.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      Alert.alert("Error", error.message || "Something went wrong");
+    }
   };
 
   const handleAddQuestion = () => {
@@ -60,9 +97,19 @@ const SetQuestions = () => {
     setQuestions(newQuestions);
   };
 
-  type QuestionField = 'question' | 'option1' | 'option2' | 'option3' | 'option4' | 'correctAnswer';
+  type QuestionField =
+    | "question"
+    | "option1"
+    | "option2"
+    | "option3"
+    | "option4"
+    | "correctAnswer";
 
-  const handleInputChange = (index: number, field: QuestionField, value: string) => {
+  const handleInputChange = (
+    index: number,
+    field: QuestionField,
+    value: string
+  ) => {
     const newQuestions = [...questions];
     newQuestions[index][field] = value;
     setQuestions(newQuestions);
