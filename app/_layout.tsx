@@ -1,5 +1,14 @@
 import { Stack } from "expo-router";
 import { Provider as PaperProvider } from 'react-native-paper';
+import { NotificationProvider } from "@/context/notificationContext";
+import * as Notifications from "expo-notifications";
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function RootLayout() {
   const theme = {
@@ -47,6 +56,7 @@ export default function RootLayout() {
     }
   }
   return (
+    <NotificationProvider>
     <PaperProvider theme={theme}>
       <Stack initialRouteName="index">
         <Stack.Screen name="student" options={{ headerShown: false }} />
@@ -58,5 +68,6 @@ export default function RootLayout() {
         <Stack.Screen name="report" options={{ headerShown: false }} />
       </Stack>
     </PaperProvider>
+    </NotificationProvider>
   );
 }
