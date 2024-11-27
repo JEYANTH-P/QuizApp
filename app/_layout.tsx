@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { Provider as PaperProvider } from 'react-native-paper';
 
 export default function RootLayout() {
+  
   const theme = {
     "colors": {
       "primary": "rgb(120, 69, 172)",

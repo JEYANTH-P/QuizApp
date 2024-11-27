@@ -27,7 +27,7 @@ const TestDetails = () => {
     const fetchQuestions = async () => {
       try {
         const userId = await AsyncStorage.getItem('userId');
-        const response = await fetch(`http://10.16.48.100:8081/marks/fetch?userId=${userId}&testId=${testId}`, {
+        const response = await fetch(`http://10.11.148.18:8081/marks/fetch?userId=${userId}&testId=${testId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

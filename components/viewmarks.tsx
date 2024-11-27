@@ -28,7 +28,7 @@ const ViewMarks = () => {
     const fetchTests = async () => {
       try {
         // Fetch test data
-        const testResponse = await fetch('http://10.16.48.100:8081/test/fetch');
+        const testResponse = await fetch('http://10.11.148.18:8081/test/fetch');
         const testData = await testResponse.json();
 
         const currentDate = new Date();
