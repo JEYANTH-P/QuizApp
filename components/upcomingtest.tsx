@@ -3,6 +3,7 @@ import { Avatar, Button, Card, Text } from 'react-native-paper';
 import { ScrollView, StyleSheet, View, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 
 const RightContent = () => <Avatar.Icon icon="calendar" style={styles.icon} />
 
@@ -21,13 +22,14 @@ const UpcomingTest = () => {
   const [upcomingTests, setUpcomingTests] = React.useState<Test[]>([]);
   const [pastTests, setPastTests] = React.useState<Test[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [currentLocation, setCurrentLocation] = React.useState<{ latitude: number, longitude: number } | null>(null);
   const router = useRouter();
 
   React.useEffect(() => {
     const fetchTests = async () => {
       try {
         // Fetch test data
-        const testResponse = await fetch('http://10.16.48.100:8081/test/fetch');
+        const testResponse = await fetch('http://10.11.148.18:8081/test/fetch');
         const testData = await testResponse.json();
 
         const currentDate = new Date();
@@ -55,7 +57,7 @@ const UpcomingTest = () => {
           Alert.alert('Error', 'User ID not found. Please log in again.');
           return;
         }
-        const response = await fetch(`http://10.16.48.100:8081/marks/fetchTestIdsByUser?userId=${userId}`, {
+        const response = await fetch(`http://10.11.148.18:8081/marks/fetchTestIdsByUser?userId=${userId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -80,21 +82,80 @@ const UpcomingTest = () => {
       }
     };
 
+    const fetchCurrentLocation = async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission to access location was denied');
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        setCurrentLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+        console.log(`current location ${location.coords.latitude}, ${location.coords.longitude}`);
+      } catch (error) {
+        console.error('Error fetching current location:', error);
+        Alert.alert('Error', 'Failed to fetch current location.');
+      }
+    };
+
     fetchTests();
+    fetchCurrentLocation();
   }, []);
 
-  const handleTestPress = (test: { testDate: any; testStartTiming: any; testEndTiming: any; testId: number; }) => {
+  const handleTestPress = (test: Test) => {
     const currentDate = new Date();
     const testStartDate = new Date(`${test.testDate}T${test.testStartTiming}:00`);
     const testEndDate = new Date(`${test.testDate}T${test.testEndTiming}:00`);
     const isOngoing = currentDate >= testStartDate && currentDate <= testEndDate;
 
     if (isOngoing && !pastTests.some(pastTest => pastTest.testId === test.testId)) {
-      router.push({
-        pathname: '/questions',
-        params: { testId: test.testId },
-      });
+      if (currentLocation) {
+        const testLocation = parseLocation(test.testLocation);
+        const distance = getDistance(currentLocation, testLocation);
+        console.log(`Distance to test location: ${distance} meters`);
+
+        if (distance > 800) {
+          Alert.alert('Unable to attend test', 'You are not at the test location.');
+          return;
+        }
+
+        router.push({
+          pathname: '/questions',
+          params: { testId: test.testId },
+        });
+      } else {
+        Alert.alert('Error', 'Current location not available.');
+      }
     }
+  };
+
+  const parseLocation = (locationString: string) => {
+    const match = locationString.match(/\(([^)]+)\)/);
+    if (match) {
+      const [latitude, longitude] = match[1].split(',').map(Number);
+      return { latitude, longitude };
+    }
+    return { latitude: 0, longitude: 0 };
+  };
+
+  const getDistance = (loc1: { latitude: number, longitude: number }, loc2: { latitude: number, longitude: number }) => {
+    const toRad = (value: number) => (value * Math.PI) / 180;
+    const R = 6371e3; // Earth radius in meters
+    const dLat = toRad(loc2.latitude - loc1.latitude);
+    const dLon = toRad(loc2.longitude - loc1.longitude);
+    const lat1 = toRad(loc1.latitude);
+    const lat2 = toRad(loc2.latitude);
+
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c; // Distance in meters
   };
 
   const renderTestCard = (test: Test) => {
@@ -104,14 +165,23 @@ const UpcomingTest = () => {
     const isOngoing = currentDate >= testStartDate && currentDate <= testEndDate;
     const isPast = pastTests.some(pastTest => pastTest.testId === test.testId);
 
+    let isFar = false;
+    if (isOngoing && currentLocation) {
+      const testLocation = parseLocation(test.testLocation);
+      const distance = getDistance(currentLocation, testLocation);
+      isFar = distance > 800;
+    }
+
+    const [locationName] = test.testLocation.split(' - ');
+
     return (
       <TouchableOpacity onPress={() => handleTestPress(test)} key={test.testId} disabled={isPast}>
-        <Card style={[styles.card, isOngoing && !isPast && styles.ongoingCard]}>
+        <Card style={[styles.card, isOngoing && !isPast && (isFar ? styles.farCard : styles.ongoingCard)]}>
           <Card.Content style={styles.cardContent}>
             <View style={styles.leftContent}>
               <Text style={styles.testName}>{test.testName}</Text>
               <Text style={styles.testDetails}>Marks: {test.testMarks}</Text>
-              <Text style={styles.testDetails}>Location: {test.testLocation}</Text>
+              <Text style={styles.testDetails}>Location: {locationName}</Text>
             </View>
             <View style={styles.rightContent}>
               <RightContent />
@@ -158,6 +228,9 @@ const styles = StyleSheet.create({
   },
   ongoingCard: {
     backgroundColor: '#d4edda', // Light green background for ongoing tests
+  },
+  farCard: {
+    backgroundColor: '#f8d7da', // Light red background for tests that are ongoing but the user is far
   },
   cardContent: {
     flexDirection: 'row',

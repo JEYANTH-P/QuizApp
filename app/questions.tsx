@@ -22,7 +22,7 @@ const Questions = () => {
   React.useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await fetch(`http://10.16.48.100:8081/questions/fetch?testId=${testId}`, {
+        const response = await fetch(`http://10.11.148.18:8081/questions/fetch?testId=${testId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ const Questions = () => {
     console.log('Formatted Answers:', JSON.stringify(formattedAnswers, null, 2));
 
     try {
-      const response = await fetch('http://10.16.48.100:8081/marks/submit', {
+      const response = await fetch('http://10.11.148.18:8081/marks/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

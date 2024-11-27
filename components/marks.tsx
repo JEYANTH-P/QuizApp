@@ -20,7 +20,7 @@ const Marks = () => {
           return;
         }
 
-        const response = await fetch(`http://10.16.48.100:8081/marks/fetchTestsByUser?userId=${userId}`, {
+        const response = await fetch(`http://10.11.148.18:8081/marks/fetchTestsByUser?userId=${userId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

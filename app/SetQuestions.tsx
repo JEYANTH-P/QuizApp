@@ -76,6 +76,48 @@ const SetQuestions = () => {
       console.error("Error:", error);
       Alert.alert("Error", error.message || "Something went wrong");
     }
+
+    try {
+      const notificationData = {
+        token: "ExponentPushToken[4iuQR9PHQHxbtNlFJA1zsx]",
+        title: "Quiz Posted",
+        body: `${testName} has been created. Login into your account for more details`,
+      };
+    
+      const response = await fetch(
+        `http://10.16.48.100:8081/notifications/send`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(notificationData),
+        }
+      );
+    
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+    
+      if (response.ok) {
+        Alert.alert("Success", "Notification sent successfully");
+      } else {
+        Alert.alert("Error", data.message || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      Alert.alert("Error", error.message || "Something went wrong");
+    }
+
+
+
+
+
+
+
+
+
+
+
   };
 
   const handleAddQuestion = () => {
