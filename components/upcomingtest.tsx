@@ -29,7 +29,7 @@ const UpcomingTest = () => {
     const fetchTests = async () => {
       try {
         // Fetch test data
-        const testResponse = await fetch('http://10.11.148.18:8081/test/fetch');
+        const testResponse = await fetch(`http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/test/fetch`);
         const testData = await testResponse.json();
 
         const currentDate = new Date();
@@ -57,7 +57,7 @@ const UpcomingTest = () => {
           Alert.alert('Error', 'User ID not found. Please log in again.');
           return;
         }
-        const response = await fetch(`http://10.11.148.18:8081/marks/fetchTestIdsByUser?userId=${userId}`, {
+        const response = await fetch(`http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/marks/fetchTestIdsByUser?userId=${userId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

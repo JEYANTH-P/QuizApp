@@ -1,8 +1,15 @@
-import * as React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { Card } from 'react-native-paper';
-import { useRoute } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { Card } from "react-native-paper";
+import { useRoute } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const TestDetails = () => {
   const route = useRoute();
@@ -26,24 +33,33 @@ const TestDetails = () => {
   React.useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const userId = await AsyncStorage.getItem('userId');
-        const response = await fetch(`http://10.11.148.18:8081/marks/fetch?userId=${userId}&testId=${testId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const userId = await AsyncStorage.getItem("userId");
+        const response = await fetch(
+          `http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/marks/fetch?userId=${userId}&testId=${testId}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         const data = await response.json();
         if (response.ok) {
           setQuestions(data[0]);
           setAwardedMarks(data[1]);
         } else {
-          Alert.alert('Error', 'Failed to fetch test details. Please try again.');
+          Alert.alert(
+            "Error",
+            "Failed to fetch test details. Please try again."
+          );
         }
       } catch (error) {
-        console.error('Error fetching questions:', error);
-        Alert.alert('Error', 'Failed to fetch questions. Please check your internet connection.');
+        console.error("Error fetching questions:", error);
+        Alert.alert(
+          "Error",
+          "Failed to fetch questions. Please check your internet connection."
+        );
       } finally {
         setLoading(false);
       }
@@ -68,19 +84,26 @@ const TestDetails = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>{testName}</Text>
       <Text style={styles.marks}>Total Marks: {testMarks}</Text>
-      <Text style={styles.marks}>Awarded Marks: {awardedMarks}</Text>
+      <Text style={styles.marks}>Percentage Awarded Marks: {awardedMarks}</Text>
       {questions.map((question, index) => (
         <Card key={question.questionId} style={styles.card}>
           <Card.Content>
             <Text style={styles.questionNumber}>Question {index + 1}</Text>
             <Text style={styles.questionText}>{question.questionText}</Text>
-            {[question.option1, question.option2, question.option3, question.option4].map(option => (
+            {[
+              question.option1,
+              question.option2,
+              question.option3,
+              question.option4,
+            ].map((option) => (
               <Card
                 key={option}
                 style={[
                   styles.optionCard,
                   option === question.correctAnswer && styles.correctOption,
-                  option === question.userAnswer && option !== question.correctAnswer && styles.wrongOption,
+                  option === question.userAnswer &&
+                    option !== question.correctAnswer &&
+                    styles.wrongOption,
                 ]}
               >
                 <Card.Content>
@@ -89,10 +112,12 @@ const TestDetails = () => {
               </Card>
             ))}
             <Text style={styles.resultText}>
-              {question.correct ? 'Correct' : 'Incorrect'}
+              {question.correct ? "Correct" : "Incorrect"}
             </Text>
             {!question.correct && (
-              <Text style={styles.correctAnswerText}>Correct Answer: {question.correctAnswer}</Text>
+              <Text style={styles.correctAnswerText}>
+                Correct Answer: {question.correctAnswer}
+              </Text>
             )}
           </Card.Content>
         </Card>
@@ -107,15 +132,15 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   marks: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   card: {
     marginBottom: 16,
@@ -124,7 +149,7 @@ const styles = StyleSheet.create({
   },
   questionNumber: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
   questionText: {
@@ -137,28 +162,28 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   correctOption: {
-    backgroundColor: '#d4edda', // Light green background for correct options
+    backgroundColor: "#d4edda", // Light green background for correct options
   },
   wrongOption: {
-    backgroundColor: '#f8d7da', // Light red background for wrong options
+    backgroundColor: "#f8d7da", // Light red background for wrong options
   },
   optionText: {
     fontSize: 16,
   },
   resultText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginTop: 8,
   },
   correctAnswerText: {
     fontSize: 16,
-    color: 'green',
+    color: "green",
     marginTop: 8,
   },
   errorText: {
     fontSize: 18,
-    color: 'red',
-    textAlign: 'center',
+    color: "red",
+    textAlign: "center",
   },
 });
 
