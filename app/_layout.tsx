@@ -1,6 +1,8 @@
 import { Stack } from "expo-router";
 import { Provider as PaperProvider } from 'react-native-paper';
+import { useEffect, useState } from 'react';
 import { NotificationProvider } from "@/context/notificationContext";
+import LottieLoader from './LottieLoader'; // Adjust the import path as needed
 import * as Notifications from "expo-notifications";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -11,6 +13,19 @@ Notifications.setNotificationHandler({
 });
 
 export default function RootLayout() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const handleLoad = () => {
+      setLoading(false);
+    };
+
+    window.addEventListener('load', handleLoad);
+
+    return () => {
+      window.removeEventListener('load', handleLoad);
+    };
+  }, []);
   
   const theme = {
     "colors": {
