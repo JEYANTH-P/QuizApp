@@ -52,7 +52,7 @@ const SetQuestions = () => {
 
     try {
       const response = await fetch(
-        `http://10.16.48.100:8081/questions/add?testName=${encodeURIComponent(
+        `http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/questions/add?testName=${encodeURIComponent(
           testName
         )}`,
         {
@@ -85,7 +85,7 @@ const SetQuestions = () => {
       };
     
       const response = await fetch(
-        `http://10.16.48.100:8081/notifications/send`,
+        `http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/notifications/send`,
         {
           method: "POST",
           headers: {
@@ -107,17 +107,6 @@ const SetQuestions = () => {
       console.error("Error:", error);
       Alert.alert("Error", error.message || "Something went wrong");
     }
-
-
-
-
-
-
-
-
-
-
-
   };
 
   const handleAddQuestion = () => {

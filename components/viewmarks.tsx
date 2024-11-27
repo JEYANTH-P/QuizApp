@@ -27,8 +27,9 @@ const ViewMarks = () => {
   React.useEffect(() => {
     const fetchTests = async () => {
       try {
+
         // Fetch test data
-        const testResponse = await fetch('http://10.11.148.18:8081/test/fetch');
+        const testResponse = await fetch(`http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/test/fetch`);
         const testData = await testResponse.json();
 
         const currentDate = new Date();

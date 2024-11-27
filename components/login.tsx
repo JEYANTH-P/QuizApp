@@ -9,7 +9,7 @@ export default function Login() {
   const navigation = useNavigation();
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://10.16.48.100:8081/login', {
+      const response = await fetch(`http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

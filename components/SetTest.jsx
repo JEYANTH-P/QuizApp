@@ -73,7 +73,7 @@ const SetTest = () => {
     });
   
     try {
-      const response = await fetch("http://10.16.48.100:8081/test/create", {
+      const response = await fetch(`http://${process.env.EXPO_PUBLIC_SERVER_IP_ADDRESS}:8081/test/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
